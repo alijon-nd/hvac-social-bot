@@ -4,7 +4,6 @@ import json
 import random
 from config import OPENROUTER_API_KEY
 
-# Different hooks to keep content fresh
 HOOKS = [
     "Ever wondered",
     "Here's why",
@@ -24,26 +23,22 @@ CONTENT_TYPES = [
 HISTORY_LOG = "caption_history.json"
 
 def load_history():
-    """Load last 10 captions to avoid repetition."""
     if os.path.exists(HISTORY_LOG):
         with open(HISTORY_LOG, "r") as f:
             return json.load(f)
     return []
 
 def save_history(history):
-    """Save caption history (keep last 10)."""
     with open(HISTORY_LOG, "w") as f:
         json.dump(history[-10:], f, indent=2)
 
 def get_photo_description(filename):
-    """Extract a readable description from the filename."""
     name = os.path.basename(filename)
     name = os.path.splitext(name)[0]
     name = name.replace("_", " ").replace("-", " ").strip()
     return name if name else "an HVAC system"
 
 def generate_captions(photo_description, history):
-    """Generate captions using OpenRouter (free)."""
     hook = random.choice(HOOKS)
     content_type = random.choice(CONTENT_TYPES)
 
@@ -71,7 +66,7 @@ FACEBOOK: [caption]
 INSTAGRAM: [caption]"""
 
     payload = {
-       "model": "meta-llama/llama-3.2-3b-instruct:free",
+        "model": "meta-llama/llama-3.2-3b-instruct:free",
         "messages": [
             {"role": "system", "content": "You are an HVAC social media expert."},
             {"role": "user", "content": system_prompt}
@@ -96,7 +91,6 @@ INSTAGRAM: [caption]"""
 
     content = response.json()["choices"][0]["message"]["content"]
 
-    # Parse response
     fb_cap = ""
     ig_cap = ""
     if "FACEBOOK:" in content and "INSTAGRAM:" in content:
