@@ -41,7 +41,6 @@ def get_photo_description(filename):
 def generate_captions(photo_description, history):
     """Generate captions with retry logic."""
     
-    # Build prompt
     hook = random.choice(HOOKS)
     style = random.choice(CONTENT_STYLES)
     
@@ -54,18 +53,18 @@ Generate 2 captions:
 2. Instagram (40-60 words, 5 hashtags)
 
 Rules:
-- 80% educational, 20% promotional  
+- 80% educational, 20% promotional
 - Mention "AN Heating & Air" once max
 - Natural, human tone, use "you/your"
 - No generic phrases like "contact us"
 - Previous captions to avoid: {history[-3:] if history else "None"}
 
-Format exactly:
+Format:
 FB: [caption]
 IG: [caption]"""
 
     payload = {
-        "model": "meta-llama/llama-3.2-3b-instruct:free",
+        "model": "microsoft/phi-3-mini-128k-instruct:free",
         "messages": [
             {"role": "system", "content": "You're an HVAC social media expert. Write engaging, professional captions."},
             {"role": "user", "content": user_prompt}
@@ -98,17 +97,25 @@ IG: [caption]"""
                 continue
                 
             response.raise_for_status()
-            break
             
+            # Check if response has 'choices'
+            data = response.json()
+            if 'choices' in data and len(data['choices']) > 0:
+                break
+            else:
+                print("⚠️ No choices in response, retrying...")
+                time.sleep(3)
+                continue
+                
         except Exception as e:
             if attempt == 3:
                 raise
-            print(f"⚠️ Attempt {attempt+1} failed, retrying...")
+            print(f"⚠️ Attempt {attempt+1} failed: {e}")
             time.sleep(3)
     
-    # Parse response
     content = response.json()["choices"][0]["message"]["content"]
     
+    # Parse response
     fb = ""
     ig = ""
     
@@ -121,7 +128,6 @@ IG: [caption]"""
         fb = parts[0].replace("FACEBOOK:", "").strip()
         ig = parts[1].strip() if len(parts) > 1 else ""
     else:
-        # Fallback
         lines = content.strip().split("\n\n")
         fb = lines[0] if lines else content
         ig = lines[1] if len(lines) > 1 else content
