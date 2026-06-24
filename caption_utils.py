@@ -64,7 +64,7 @@ FB: [caption]
 IG: [caption]"""
 
     payload = {
-        "model": "microsoft/phi-3-mini-128k-instruct:free",
+        "model": "google/gemini-2.0-flash-lite-preview-02-05:free",
         "messages": [
             {"role": "system", "content": "You're an HVAC social media expert. Write engaging, professional captions."},
             {"role": "user", "content": user_prompt}
