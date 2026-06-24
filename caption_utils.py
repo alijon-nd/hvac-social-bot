@@ -2,7 +2,7 @@ import os
 import requests
 import json
 import random
-from config import DEEPSEEK_API_KEY, DEEPSEEK_URL, HISTORY_LOG
+from config import OPENROUTER_API_KEY
 
 # Different hooks to keep content fresh
 HOOKS = [
@@ -20,6 +20,8 @@ CONTENT_TYPES = [
     "educational", "behind-the-scenes", "customer-focused",
     "seasonal", "myth-busting", "storytelling"
 ]
+
+HISTORY_LOG = "caption_history.json"
 
 def load_history():
     """Load last 10 captions to avoid repetition."""
@@ -41,12 +43,10 @@ def get_photo_description(filename):
     return name if name else "an HVAC system"
 
 def generate_captions(photo_description, history):
-    """Generate captions using DeepSeek with rotation logic."""
-    # Select a random hook and content type
+    """Generate captions using OpenRouter (free)."""
     hook = random.choice(HOOKS)
     content_type = random.choice(CONTENT_TYPES)
 
-    # Build system prompt
     system_prompt = f"""You are a professional HVAC social media manager for AN Heating & Air.
 
 Photo shows: {photo_description}
@@ -71,7 +71,7 @@ FACEBOOK: [caption]
 INSTAGRAM: [caption]"""
 
     payload = {
-        "model": "deepseek-chat",
+        "model": "google/gemini-2.0-flash-lite-preview-02-05:free",
         "messages": [
             {"role": "system", "content": "You are an HVAC social media expert."},
             {"role": "user", "content": system_prompt}
@@ -81,11 +81,17 @@ INSTAGRAM: [caption]"""
     }
 
     headers = {
-        "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
-        "Content-Type": "application/json"
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://www.anairconditioning.com",
+        "X-Title": "HVAC Social Bot"
     }
 
-    response = requests.post(DEEPSEEK_URL, json=payload, headers=headers)
+    response = requests.post(
+        "https://openrouter.ai/api/v1/chat/completions",
+        json=payload,
+        headers=headers
+    )
     response.raise_for_status()
 
     content = response.json()["choices"][0]["message"]["content"]
