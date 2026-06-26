@@ -89,5 +89,13 @@ def main():
     os.unlink(original_path)
     os.unlink(branded_path)
 
+
+
+# Save captions to file
+with open("last_captions.txt", "w") as f:
+    f.write(f"FACEBOOK:\n{captions['facebook']}\n\n")
+    f.write(f"INSTAGRAM:\n{captions['instagram']}\n")
+print("📄 Captions saved to last_captions.txt")
+
 if __name__ == "__main__":
     main()
