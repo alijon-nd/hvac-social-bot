@@ -60,6 +60,15 @@ def main():
     print(f"\n📝 FB: {captions['facebook'][:150]}...")
     print(f"\n📝 IG: {captions['instagram'][:150]}...")
     
+    # Save captions to file (for viewing later)
+    try:
+        with open("last_captions.txt", "w") as f:
+            f.write(f"FACEBOOK:\n{captions['facebook']}\n\n")
+            f.write(f"INSTAGRAM:\n{captions['instagram']}\n")
+        print("📄 Captions saved to last_captions.txt")
+    except Exception as e:
+        print(f"⚠️ Could not save captions file: {e}")
+    
     # Post
     try:
         if DRY_RUN:
@@ -86,16 +95,11 @@ def main():
         print(f"❌ Error: {e}")
     
     # Cleanup
-    os.unlink(original_path)
-    os.unlink(branded_path)
-
-
-
-# Save captions to file
-with open("last_captions.txt", "w") as f:
-    f.write(f"FACEBOOK:\n{captions['facebook']}\n\n")
-    f.write(f"INSTAGRAM:\n{captions['instagram']}\n")
-print("📄 Captions saved to last_captions.txt")
+    try:
+        os.unlink(original_path)
+        os.unlink(branded_path)
+    except:
+        pass
 
 if __name__ == "__main__":
     main()
