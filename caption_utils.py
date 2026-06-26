@@ -3,18 +3,27 @@ import json
 import random
 import time
 import requests
-from config import OPENROUTER_API_KEY
+from config import DEEPSEEK_API_KEY
 
 # Dynamic content templates
 HOOKS = [
-    "Ever wondered", "Here's why", "Most homeowners don't know",
-    "This happens more than you think", "The truth about",
-    "Here's a quick tip", "What if I told you", "One thing we always check"
+    "Ever wondered",
+    "Here's why",
+    "Most homeowners don't know",
+    "This happens more than you think",
+    "The truth about",
+    "Here's a quick tip",
+    "What if I told you",
+    "One thing we always check"
 ]
 
 CONTENT_STYLES = [
-    "educational", "behind-the-scenes", "customer-focused",
-    "seasonal", "myth-busting", "storytelling"
+    "educational",
+    "behind-the-scenes",
+    "customer-focused",
+    "seasonal",
+    "myth-busting",
+    "storytelling"
 ]
 
 HISTORY_FILE = "caption_history.json"
@@ -39,7 +48,7 @@ def get_photo_description(filename):
     return name if name else "an HVAC system"
 
 def generate_captions(photo_description, history):
-    """Generate captions with retry logic."""
+    """Generate captions using DeepSeek API with retry logic."""
     
     hook = random.choice(HOOKS)
     style = random.choice(CONTENT_STYLES)
@@ -49,66 +58,57 @@ Start with: "{hook}..."
 Style: {style}
 
 Generate 2 captions:
-1. Facebook (100-150 words, include https://www.anairconditioning.com)
+1. Facebook (100-150 words, include https://www.anairconditioning.com naturally)
 2. Instagram (40-60 words, 5 hashtags)
 
 Rules:
 - 80% educational, 20% promotional
-- Mention "AN Heating & Air" once max
-- Natural, human tone, use "you/your"
-- No generic phrases like "contact us"
+- Mention "AN Heating & Air" only ONCE per caption
+- Natural, human tone, use "you" and "your"
+- Ask 1 rhetorical question
+- No generic phrases like "contact us today" or "we are proud"
 - Previous captions to avoid: {history[-3:] if history else "None"}
 
-Format:
+Format EXACTLY:
 FB: [caption]
 IG: [caption]"""
 
     payload = {
-        "model": "google/gemini-2.0-flash-lite-preview-02-05:free",
+        "model": "deepseek-chat",
         "messages": [
-            {"role": "system", "content": "You're an HVAC social media expert. Write engaging, professional captions."},
+            {"role": "system", "content": "You are an HVAC social media expert. Write engaging, professional captions."},
             {"role": "user", "content": user_prompt}
         ],
-        "temperature": 0.8,
-        "max_tokens": 400
+        "temperature": 0.85,
+        "max_tokens": 500
     }
     
     headers = {
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://www.anairconditioning.com",
-        "X-Title": "HVAC Bot"
+        "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+        "Content-Type": "application/json"
     }
     
     # Retry logic
-    for attempt in range(4):
+    for attempt in range(3):
         try:
             response = requests.post(
-                "https://openrouter.ai/api/v1/chat/completions",
+                "https://api.deepseek.com/v1/chat/completions",
                 json=payload,
                 headers=headers,
                 timeout=30
             )
             
             if response.status_code == 429:
-                wait = (attempt + 1) * 8
+                wait = (attempt + 1) * 5
                 print(f"⏳ Rate limit, waiting {wait}s...")
                 time.sleep(wait)
                 continue
-                
-            response.raise_for_status()
             
-            # Check if response has 'choices'
-            data = response.json()
-            if 'choices' in data and len(data['choices']) > 0:
-                break
-            else:
-                print("⚠️ No choices in response, retrying...")
-                time.sleep(3)
-                continue
-                
+            response.raise_for_status()
+            break
+            
         except Exception as e:
-            if attempt == 3:
+            if attempt == 2:
                 raise
             print(f"⚠️ Attempt {attempt+1} failed: {e}")
             time.sleep(3)
